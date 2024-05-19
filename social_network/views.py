@@ -3,6 +3,7 @@ from rest_framework import generics, status, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from social_network.models import User, Post, Comment, Hashtag
 from social_network.serializers import (
@@ -32,6 +33,7 @@ class UserViewSet(
     GenericViewSet,
 ):
     serializer_class = UserSerializer
+    authentication_classes = (JWTAuthentication,)
     queryset = User.objects.all()
 
     def get_serializer_class(self):
@@ -146,8 +148,9 @@ class HashtagViewSet(
     generics.RetrieveAPIView,
     viewsets.GenericViewSet
 ):
-    queryset = Hashtag.objects.all()
     serializer_class = HashtagSerializer
+    authentication_classes = (JWTAuthentication,)
+    queryset = Hashtag.objects.all()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -159,6 +162,7 @@ class HashtagViewSet(
 
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
+    authentication_classes = (JWTAuthentication,)
     queryset = Post.objects.all()
 
     def perform_create(self, serializer):
@@ -232,6 +236,7 @@ class PostViewSet(ModelViewSet):
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
+    authentication_classes = (JWTAuthentication,)
     queryset = Comment.objects.all()
 
     def get_queryset(self):
