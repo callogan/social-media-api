@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "followers",
             "followings",
-            "profile_picture",
+            "image",
             "bio"
         )
         read_only_fields = ("is_staff",)
@@ -53,10 +53,17 @@ class UserListSerializer(UserSerializer):
             "email",
             "first_name",
             "last_name",
+            "image",
             "posts",
             "followers",
             "followings"
         )
+
+
+class UserImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "image")
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -68,8 +75,15 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at",)
 
 
+class PostImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ("id", "image")
+
+
 class PostSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    images = PostImageSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
@@ -80,6 +94,7 @@ class PostSerializer(serializers.ModelSerializer):
             "author",
             "content",
             "created_at",
+            "images",
             "published",
             "publish_time",
             "comments"
@@ -108,6 +123,7 @@ class PostListSerializer(PostSerializer):
             "id",
             "title",
             "author",
+            "images",
             "published",
             "publish_time",
             "likes",
@@ -129,6 +145,7 @@ class PostDetailSerializer(PostSerializer):
             "content",
             "author",
             "created_at",
+            "images",
             "likes",
             "comments"
         )

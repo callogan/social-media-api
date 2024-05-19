@@ -8,9 +8,11 @@ from social_network.models import User, Post, Comment
 from social_network.serializers import (
     UserSerializer,
     UserListSerializer,
+    UserImageSerializer,
     PostSerializer,
     PostListSerializer,
     PostDetailSerializer,
+    PostImageSerializer,
     CommentSerializer,
 )
 
@@ -32,6 +34,8 @@ class UserViewSet(
     def get_serializer_class(self):
         if self.action == "list":
             return UserListSerializer
+        if self.action == "upload_image":
+            return UserImageSerializer
         return self.serializer_class
 
     def get_queryset(self):
@@ -113,6 +117,19 @@ class UserViewSet(
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="upload-image",
+    )
+    def upload_image(self, request, pk=None):
+        user = self.get_object()
+        serializer = self.get_serializer(user, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
@@ -146,6 +163,8 @@ class PostViewSet(ModelViewSet):
             return PostListSerializer
         if self.action == "retrieve":
             return PostDetailSerializer
+        if self.action == "upload_image":
+            return PostImageSerializer
         return self.serializer_class
 
     @action(
@@ -163,6 +182,19 @@ class PostViewSet(ModelViewSet):
             post.likes.add(request.user)
 
         post.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="upload-image",
+    )
+    def upload_image(self, request, pk=None):
+        post = self.get_object()
+        serializer = self.get_serializer(post, data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -1,7 +1,11 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.text import slugify
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -46,10 +50,20 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+def user_image_file_path(instance, filename: str):
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(instance.last_name)}-{uuid.uuid4()}{extension}"
+
+    return os.path.join("uploads", "users", filename)
+
+
 class User(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
     bio = models.TextField()
+    image = models.ImageField(
+        null=True, blank=True, upload_to=user_image_file_path
+    )
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name="followed_users",
@@ -74,6 +88,13 @@ class User(AbstractUser):
         ordering = ["email"]
 
 
+def post_image_file_path(instance, filename: str):
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
+
+    return os.path.join("uploads", "posts", filename)
+
+
 class Post(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -82,6 +103,9 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=255)
     content = models.TextField()
+    image = models.ImageField(
+        null=True, blank=True, upload_to=post_image_file_path
+    )
     created_at = models.DateTimeField(blank=True, default=timezone.now)
     likes = models.ManyToManyField(User, related_name="post_like", blank=True)
     published = models.BooleanField(default=True)
