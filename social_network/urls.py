@@ -6,12 +6,14 @@ from social_network.views import (
     CreateUserView,
     PostViewSet,
     CommentViewSet,
+    HashtagViewSet,
 )
 
 router = routers.DefaultRouter()
 router.register("users", UserViewSet)
 router.register("posts", PostViewSet)
 router.register("comments", CommentViewSet)
+router.register("hashtags", HashtagViewSet)
 
 comment_list = CommentViewSet.as_view(
     actions={"get": "list", "post": "create"}

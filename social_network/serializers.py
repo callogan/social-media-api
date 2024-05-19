@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from social_network.models import Post, Comment
+from social_network.models import Post, Comment, Hashtag
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,6 +75,33 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ("created_at",)
 
 
+class HashtagField(serializers.CharField):
+    def to_representation(self, value):
+        if value is None:
+            return None
+        return f"#{value}"
+
+    def to_internal_value(self, data):
+        hashtag_value = data.lstrip('#')
+        return super().to_internal_value(hashtag_value)
+
+
+class HashtagSerializer(serializers.ModelSerializer):
+    name = HashtagField(required=False)
+
+    class Meta:
+        model = Hashtag
+        fields = ("id", "name")
+
+
+class HashtagListSerializer(HashtagSerializer):
+    posts = serializers.IntegerField(source="posts.count", read_only=True)
+
+    class Meta:
+        model = Hashtag
+        fields = ("id", "name", "posts")
+
+
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
@@ -83,6 +110,7 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    hashtags = HashtagSerializer(many=True, required=False)
     images = PostImageSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
 
@@ -94,12 +122,35 @@ class PostSerializer(serializers.ModelSerializer):
             "author",
             "content",
             "created_at",
+            "hashtags",
             "images",
             "published",
             "publish_time",
             "comments"
         )
         read_only_fields = ("id", "author", "likes")
+
+    def create(self, validated_data):
+        hashtag_data = validated_data.pop("hashtags", None)
+        post = Post.objects.create(**validated_data)
+
+        if hashtag_data:
+            for hashtag_name in hashtag_data:
+                hashtag, _ = Hashtag.objects.get_or_create(name=hashtag_name["name"])
+                post.hashtags.add(hashtag)
+
+        return post
+
+    def update(self, instance, validated_data):
+        hashtag_data = validated_data.pop("hashtags", None)
+        instance = super().update(instance, validated_data)
+
+        if hashtag_data:
+            for hashtag_name in hashtag_data:
+                hashtag, _ = Hashtag.objects.get_or_create(name=hashtag_name["name"])
+                instance.hashtags.add(hashtag)
+
+        return instance
 
     def validate(self, data):
         if not data.get("published") and data.get("publish_time") is None:
@@ -110,6 +161,9 @@ class PostSerializer(serializers.ModelSerializer):
 class PostListSerializer(PostSerializer):
     author = serializers.SlugRelatedField(
         slug_field="last_name", read_only=True
+    )
+    hashtags = serializers.SlugRelatedField(
+        many=True, slug_field="name", read_only=True
     )
     likes = serializers.IntegerField(source="likes.count", read_only=True)
     is_liked = serializers.BooleanField(read_only=True)
@@ -123,6 +177,7 @@ class PostListSerializer(PostSerializer):
             "id",
             "title",
             "author",
+            "hashtags",
             "images",
             "published",
             "publish_time",
@@ -149,3 +204,11 @@ class PostDetailSerializer(PostSerializer):
             "likes",
             "comments"
         )
+
+
+class HashtagDetailSerializer(HashtagSerializer):
+    posts = PostListSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Hashtag
+        fields = ("id", "name", "posts")

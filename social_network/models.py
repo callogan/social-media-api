@@ -88,6 +88,13 @@ class User(AbstractUser):
         ordering = ["email"]
 
 
+class Hashtag(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self) -> str:
+        return self.name
+
+
 def post_image_file_path(instance, filename: str):
     _, extension = os.path.splitext(filename)
     filename = f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
@@ -107,7 +114,12 @@ class Post(models.Model):
         null=True, blank=True, upload_to=post_image_file_path
     )
     created_at = models.DateTimeField(blank=True, default=timezone.now)
-    likes = models.ManyToManyField(User, related_name="post_like", blank=True)
+    likes = models.ManyToManyField(
+        User, related_name="post_like", blank=True
+    )
+    hashtags = models.ManyToManyField(
+        Hashtag, related_name="posts", blank=True
+    )
     published = models.BooleanField(default=True)
     publish_time = models.DateTimeField(null=True, blank=True)
 

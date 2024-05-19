@@ -1,10 +1,10 @@
 from django.db.models import Q
-from rest_framework import generics, status, mixins
+from rest_framework import generics, status, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
-from social_network.models import User, Post, Comment
+from social_network.models import User, Post, Comment, Hashtag
 from social_network.serializers import (
     UserSerializer,
     UserListSerializer,
@@ -14,6 +14,9 @@ from social_network.serializers import (
     PostDetailSerializer,
     PostImageSerializer,
     CommentSerializer,
+    HashtagSerializer,
+    HashtagListSerializer,
+    HashtagDetailSerializer,
 )
 
 
@@ -131,6 +134,23 @@ class UserViewSet(
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class HashtagViewSet(
+    generics.ListCreateAPIView,
+    mixins.UpdateModelMixin,
+    generics.RetrieveAPIView,
+    viewsets.GenericViewSet
+):
+    queryset = Hashtag.objects.all()
+    serializer_class = HashtagSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return HashtagListSerializer
+        if self.action == "retrieve":
+            return HashtagDetailSerializer
+        return self.serializer_class
+
+
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
@@ -145,8 +165,12 @@ class PostViewSet(ModelViewSet):
             Q(author=user) | Q(author__in=user_followings)
         ).filter(published=True)
 
+        hashtag = self.request.query_params.get("hashtag")
         title = self.request.query_params.get("title")
         author_last_name = self.request.query_params.get("author_last_name")
+
+        if hashtag:
+            queryset = queryset.filter(hashtags__name__icontains=hashtag)
 
         if title:
             queryset = queryset.filter(title__icontains=title)
