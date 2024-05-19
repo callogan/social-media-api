@@ -113,7 +113,7 @@ class Post(models.Model):
     image = models.ImageField(
         null=True, blank=True, upload_to=post_image_file_path
     )
-    created_at = models.DateTimeField(blank=True, default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(
         User, related_name="post_like", blank=True
     )
