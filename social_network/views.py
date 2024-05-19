@@ -1,11 +1,13 @@
 from django.db.models import Q
 from rest_framework import generics, status, mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from social_network.models import User, Post, Comment, Hashtag
+from social_network.permissions import IsAuthorOrIfAuthenticatedReadOnly
 from social_network.serializers import (
     UserSerializer,
     UserListSerializer,
@@ -34,6 +36,7 @@ class UserViewSet(
 ):
     serializer_class = UserSerializer
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthorOrIfAuthenticatedReadOnly,)
     queryset = User.objects.all()
 
     def get_serializer_class(self):
@@ -57,6 +60,7 @@ class UserViewSet(
         methods=["POST"],
         detail=True,
         url_path="follow-unfollow",
+        permission_classes=[IsAuthenticated],
     )
     def follow_unfollow(self, request, pk=None):
         """Endpoint for following/unfollowing certain user."""
@@ -75,6 +79,7 @@ class UserViewSet(
         methods=["GET"],
         detail=True,
         url_path="followings",
+        permission_classes=[IsAuthenticated],
     )
     def followings(self, request, pk):
         """Endpoint to retrieve followings of certain user."""
@@ -89,6 +94,7 @@ class UserViewSet(
         methods=["GET"],
         detail=True,
         url_path="followers",
+        permission_classes=[IsAuthenticated],
     )
     def followers(self, request, pk):
         """Endpoint to retrieve followers of certain user."""
@@ -103,6 +109,7 @@ class UserViewSet(
         methods=["GET"],
         detail=True,
         url_path="published-posts",
+        permission_classes=[IsAuthenticated],
     )
     def published_posts(self, request, pk):
         """Endpoint to retrieve published posts of certain user."""
@@ -117,6 +124,7 @@ class UserViewSet(
         methods=["GET"],
         detail=True,
         url_path="liked-posts",
+        permission_classes=[IsAuthenticated],
     )
     def liked_posts(self, request, pk):
         """Endpoint to retrieve a post that was liked by current user."""
@@ -131,6 +139,7 @@ class UserViewSet(
         methods=["POST"],
         detail=True,
         url_path="upload-image",
+        permission_classes=[IsAuthenticated],
     )
     def upload_image(self, request, pk=None):
         """Endpoint for uploading profile picture to current user."""
@@ -150,6 +159,7 @@ class HashtagViewSet(
 ):
     serializer_class = HashtagSerializer
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
     queryset = Hashtag.objects.all()
 
     def get_serializer_class(self):
@@ -163,6 +173,10 @@ class HashtagViewSet(
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (
+        IsAuthenticated,
+        IsAuthorOrIfAuthenticatedReadOnly,
+    )
     queryset = Post.objects.all()
 
     def perform_create(self, serializer):
@@ -205,6 +219,7 @@ class PostViewSet(ModelViewSet):
         methods=["POST"],
         detail=True,
         url_path="like-unlike",
+        permission_classes=[IsAuthenticated],
     )
     def like(self, request, pk=None):
         """Endpoint for liking/unliking certain post."""
@@ -223,6 +238,7 @@ class PostViewSet(ModelViewSet):
         methods=["POST"],
         detail=True,
         url_path="upload-image",
+        permission_classes=[IsAuthenticated],
     )
     def upload_image(self, request, pk=None):
         """Endpoint for uploading an image to certain post."""
@@ -237,6 +253,7 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthorOrIfAuthenticatedReadOnly,)
     queryset = Comment.objects.all()
 
     def get_queryset(self):
