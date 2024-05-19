@@ -57,6 +57,7 @@ class UserViewSet(
         url_path="follow-unfollow",
     )
     def follow_unfollow(self, request, pk=None):
+        """Endpoint for following/unfollowing certain user."""
         following = self.get_object()
         follower = self.request.user
         if following not in follower.followings.all():
@@ -74,6 +75,7 @@ class UserViewSet(
         url_path="followings",
     )
     def followings(self, request, pk):
+        """Endpoint to retrieve followings of certain user."""
         user = User.objects.get(id=pk)
         followings = user.followings.all()
 
@@ -87,6 +89,7 @@ class UserViewSet(
         url_path="followers",
     )
     def followers(self, request, pk):
+        """Endpoint to retrieve followers of certain user."""
         user = User.objects.get(id=pk)
         followers = user.followers.all()
 
@@ -100,6 +103,7 @@ class UserViewSet(
         url_path="published-posts",
     )
     def published_posts(self, request, pk):
+        """Endpoint to retrieve published posts of certain user."""
         user = User.objects.get(id=pk)
         posts = user.posts.filter(published=True)
 
@@ -113,6 +117,7 @@ class UserViewSet(
         url_path="liked-posts",
     )
     def liked_posts(self, request, pk):
+        """Endpoint to retrieve a post that was liked by current user."""
         user = self.request.user
         liked_posts = user.post_like.all()
 
@@ -126,6 +131,7 @@ class UserViewSet(
         url_path="upload-image",
     )
     def upload_image(self, request, pk=None):
+        """Endpoint for uploading profile picture to current user."""
         user = self.get_object()
         serializer = self.get_serializer(user, data=request.data)
 
@@ -197,6 +203,7 @@ class PostViewSet(ModelViewSet):
         url_path="like-unlike",
     )
     def like(self, request, pk=None):
+        """Endpoint for liking/unliking certain post."""
         post = self.get_object()
         serializer = PostSerializer(post)
 
@@ -214,6 +221,7 @@ class PostViewSet(ModelViewSet):
         url_path="upload-image",
     )
     def upload_image(self, request, pk=None):
+        """Endpoint for uploading an image to certain post."""
         post = self.get_object()
         serializer = self.get_serializer(post, data=request.data)
 
