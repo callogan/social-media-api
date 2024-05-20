@@ -1,4 +1,6 @@
 from django.db.models import Q
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import generics, status, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -150,6 +152,20 @@ class UserViewSet(
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # For documentation purposes only
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="last_name",
+                type={"type": "list", "items": {"type": "string"}},
+                description="Filter by user's last name "
+                            "(ex. ?last_name=Simmons)"
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class HashtagViewSet(
     generics.ListCreateAPIView,
@@ -249,6 +265,33 @@ class PostViewSet(ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # For documentation purposes only
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="hashtag",
+                type=OpenApiTypes.STR,
+                description="Filter posts by "
+                            "hashtag (ex. ?hashtag=innovations)"
+            ),
+            OpenApiParameter(
+                name="title",
+                type=OpenApiTypes.STR,
+                description="Filter posts by "
+                            "title (ex. ?title=Developing renewable "
+                            "technologies)"
+            ),
+            OpenApiParameter(
+                name="last_name",
+                type=OpenApiTypes.STR,
+                description="Filter posts by "
+                            "user's last name (ex. ?last_name=Simmons)"
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
@@ -271,3 +314,16 @@ class CommentViewSet(ModelViewSet):
         serializer.save(
             author=self.request.user, post=Post.objects.get(id=post_id)
         )
+
+    # For documentation purposes only
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="post_id",
+                type={"type": "number"},
+                description="Filter by particular post (ex. ?post_id=5)"
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
