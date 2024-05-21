@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "debug_toolbar",
     "social_network",
+    "django_celery_beat",
+    "django_celery_results",
     "drf_spectacular",
 ]
 
@@ -178,3 +180,9 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+CELERY_TIMEZONE = "Europe/Kyiv"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
